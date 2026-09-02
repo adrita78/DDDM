@@ -1,5 +1,4 @@
 import argparse
-import inspect
 
 from . import gaussian_diffusion as gd
 from .unet import UNetModel
@@ -27,11 +26,11 @@ def model_and_diffusion_defaults():
         sigma_max=50,
         use_checkpoint=False,
         use_scale_shift_norm=True,
-        use_ph = False,
-        use_pl = False,
-        use_CA = True,
-        VP = True,
-        c = 1.4e-4,
+        use_ph=False,
+        use_pl=False,
+        use_CA=True,
+        VP=True,
+        c=1.4e-4,
     )
 
 
@@ -55,7 +54,7 @@ def create_model_and_diffusion(
     use_pl,
     use_ph,
     use_CA,
-    c
+    c,
 ):
     model = create_model(
         image_size,
@@ -69,18 +68,20 @@ def create_model_and_diffusion(
         num_heads_upsample=num_heads_upsample,
         use_scale_shift_norm=use_scale_shift_norm,
         dropout=dropout,
-        use_CA = use_CA,
+        use_CA=use_CA,
     )
+
     diffusion = create_gaussian_diffusion(
         sigma_min=sigma_min,
         sigma_max=sigma_max,
         steps=diffusion_steps,
         noise_schedule=noise_schedule,
-        VP = VP,
+        VP=VP,
         use_pl=use_pl,
         use_ph=use_ph,
         c=c,
     )
+
     return model, diffusion
 
 
@@ -114,7 +115,7 @@ def create_model(
     return UNetModel(
         in_channels=(3 if not concat else 6),
         model_channels=num_channels,
-        out_channels=3 ,
+        out_channels=3,
         num_res_blocks=num_res_blocks,
         attention_resolutions=tuple(attention_ds),
         dropout=dropout,
@@ -124,9 +125,8 @@ def create_model(
         num_heads=num_heads,
         num_heads_upsample=num_heads_upsample,
         use_scale_shift_norm=use_scale_shift_norm,
-        use_CA = use_CA
+        use_CA=use_CA,
     )
-
 
 
 def create_gaussian_diffusion(
@@ -135,42 +135,69 @@ def create_gaussian_diffusion(
     steps=1000,
     VP=True,
     noise_schedule="linear",
-    use_pl = False,
-    use_ph = True,
-    c = 0.0,
+    use_pl=False,
+    use_ph=True,
+    c=0.0,
 ):
-
-    
-    
     if use_ph:
         loss_type = gd.LossType.PH
     elif use_pl:
-        
         loss_type = gd.LossType.PL
     else:
         loss_type = gd.LossType.MSE
-    
+
     if VP:
-        betas = gd.get_named_beta_schedule(noise_schedule, steps,sigma_min,sigma_max)
-        return gd.VP_Diffusion(betas,loss_type,c)
+        betas = gd.get_named_beta_schedule(
+            noise_schedule,
+            steps,
+            sigma_min,
+            sigma_max,
+        )
+
+        return gd.VP_Diffusion(
+            betas,
+            loss_type,
+            c,
+        )
+
     else:
-        sigmas = gd.get_sigma_schedule(steps,sigma_min,sigma_max)
-        return gd.VE_Diffusion(steps,loss_type,c)
-    
+        sigmas = gd.get_sigma_schedule(
+            steps,
+            sigma_min,
+            sigma_max,
+        )
+
+        # FIX:
+        # VE_Diffusion expects the sigma schedule itself,
+        # not the number of diffusion steps.
+        return gd.VE_Diffusion(
+            sigmas,
+            loss_type,
+            c,
+        )
 
 
 def add_dict_to_argparser(parser, default_dict):
     for k, v in default_dict.items():
         v_type = type(v)
+
         if v is None:
             v_type = str
         elif isinstance(v, bool):
             v_type = str2bool
-        parser.add_argument(f"--{k}", default=v, type=v_type)
+
+        parser.add_argument(
+            f"--{k}",
+            default=v,
+            type=v_type,
+        )
 
 
 def args_to_dict(args, keys):
-    return {k: getattr(args, k) for k in keys}
+    return {
+        k: getattr(args, k)
+        for k in keys
+    }
 
 
 def str2bool(v):
@@ -179,9 +206,14 @@ def str2bool(v):
     """
     if isinstance(v, bool):
         return v
+
     if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
+
     elif v.lower() in ("no", "false", "f", "n", "0"):
         return False
+
     else:
-        raise argparse.ArgumentTypeError("boolean value expected")
+        raise argparse.ArgumentTypeError(
+            "boolean value expected"
+        )
