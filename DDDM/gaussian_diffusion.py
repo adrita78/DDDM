@@ -179,7 +179,9 @@ class VP_Diffusion:
         model_kwargs=None,
         device=None,
         sample_steps=1,
-        
+        sigma=0.1,
+        sample_steps=1,
+        diagnostics=False,       
     ):
         """
         Generate samples from the model and yield intermediate samples from
