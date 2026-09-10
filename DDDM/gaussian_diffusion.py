@@ -179,8 +179,6 @@ class VP_Diffusion:
         model_kwargs=None,
         device=None,
         sample_steps=1,
-        sigma=0.1,
-        sample_steps=1,
         diagnostics=False,       
     ):
         """
@@ -191,13 +189,33 @@ class VP_Diffusion:
         Returns a generator over dicts, where each dict is the return value of
         p_sample().
         """
+
+        if model_kwargs is None:
+        model_kwargs = {}
+        
         if device is None:
             device = next(model.parameters()).device
         assert isinstance(shape, (tuple, list))
+
+        records = []
        
         x_T = th.randn(*shape, device=device)
         x_bar = th.randn(*shape, device=device)
         T = th.tensor([self.num_timesteps] * shape[0], device=device)
+        sigma = torch.tensor(
+            self.sqrt_one_minus_alphas_cumprod[t],
+            device=x_T.device,
+            dtype=x_T.dtype,
+        )
+
+        result = analyze_reconstruction(
+            model=model,
+            x_T=x_T,
+            x_bar=x_bar,
+            T=T,
+            sigma=sigma,
+            model_kwargs=model_kwargs,
+        )
 
         for i in range(sample_steps):
             with th.no_grad():
@@ -209,82 +227,20 @@ class VP_Diffusion:
                     model_kwargs=model_kwargs,
                 )
                 x_bar = out
+
+         records.append({
+            "t": t,
+            "sigma": sigma.item(),
+            "R": result["R"].item(),
+            "L": result["L"].item(),
+            "B_sq": result["B_sq"].item(),
+            "mu_bound": result["mu_bound"].item(),
+        })
+
+  
                
-        return x_bar
-
-    def p_sample_loop(
-    self,
-    model,
-    shape,
-    noise=None,
-    condition=None,
-    model_kwargs=None,
-    device=None,
-    sample_steps=1,
-    sigma=None,
-    diagnostics=False,
-):
-    if device is None:
-        device = next(model.parameters()).device
-
-    if model_kwargs is None:
-        model_kwargs = {}
-
-    # Initial noisy state
-    x_T = torch.randn(*shape, device=device)
-
-    # Initial reconstruction
-    x_bar = torch.randn(*shape, device=device)
-
-    T = torch.tensor(
-        [self.num_timesteps] * shape[0],
-        device=device,
-    )
-
-    diagnostic_records = []
-
-    for step in range(sample_steps):
-
-        # ---------------------------------------------
-        # Diagnostics for current x_bar
-        # ---------------------------------------------
-        if diagnostics:
-
-            result = analyze_reconstruction(
-                model=model,
-                x_T=x_T,
-                x_bar=x_bar,
-                T=T,
-                sigma=sigma,
-                model_kwargs=model_kwargs,
-            )
-
-            diagnostic_records.append({
-                "step": step,
-                "R": result["R"].item(),
-                "L": result["L"].item(),
-                "B_sq": result["B_sq"].item(),
-                "mu_bound": result["mu_bound"].item(),
-            })
-
-        # ---------------------------------------------
-        # Actual DDDM update
-        # ---------------------------------------------
-        with torch.no_grad():
-
-            x_bar = self.p_sample(
-                model=model,
-                x_T=x_T,
-                T=T,
-                x_bar=x_bar,
-                model_kwargs=model_kwargs,
-            )
-
-    if diagnostics:
-        return x_bar, diagnostic_records
-
-    return x_bar
-   
+        return x_bar, records
+        
 
     def training_losses(self, model, x_start, t, index,condition,model_kwargs=None, noise=None):
         """
