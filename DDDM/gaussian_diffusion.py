@@ -236,8 +236,6 @@ class VP_Diffusion:
             "B_sq": result["B_sq"].item(),
             "mu_bound": result["mu_bound"].item(),
         })
-
-  
                
         return x_bar, records
         
