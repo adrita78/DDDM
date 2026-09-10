@@ -65,10 +65,6 @@ def get_sigma_schedule(num_diffusion_timesteps,sigma_min,sigma_max):
     return np.exp(np.linspace(np.log(sigma_min), np.log(sigma_max), num_diffusion_timesteps))
 
 
-
-
-
-
 class LossType(enum.Enum):
     MSE = enum.auto()  # use raw MSE loss
 
@@ -76,8 +72,6 @@ class LossType(enum.Enum):
     PL = enum.auto() # Pseudo-LPIPS
 
    
-
-
 class VP_Diffusion:
     """
     Utilities for training and sampling diffusion models.
