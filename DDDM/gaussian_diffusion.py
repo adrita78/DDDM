@@ -391,6 +391,29 @@ class VE_Diffusion:
         x_T = th.randn(*shape, device=device)
         x_bar = th.randn(*shape, device=device)
         T = th.tensor([self.num_timesteps] * shape[0], device=device)
+        sigma = th.as_tensor(self.sigmas,device=device,dtype=x_T.dtype,)[T]
+    
+        sigma = sigma[0]
+        records = []
+        if diagnostics:
+
+        result = analyze_reconstruction(
+            model=model,
+            x_T=x_T,
+            x_bar=x_bar,
+            T=T,
+            sigma=sigma,
+            model_kwargs=model_kwargs,
+        )
+
+        records.append({
+            "t": T[0].item(),
+            "sigma": result["sigma"].item(),
+            "R": result["R"].item(),
+            "L": result["L"].item(),
+            "B_sq": result["B_sq"].item(),
+            "mu_bound": result["mu_bound"].item(),
+        })
 
         for i in range(sample_steps):
             with th.no_grad():
