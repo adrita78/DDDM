@@ -158,7 +158,6 @@ def estimate_hessian_bound(
 
 def analyze_reconstruction(
     model,
-    diffusion,
     x_T,
     x_bar,
     T,
@@ -211,13 +210,6 @@ def analyze_reconstruction(
         model_kwargs=model_kwargs,
     )
 
-    # --------------------------------------------------
-    # Diffusion noise level:
-    # sigma_T = sqrt(1 - alpha_bar_T)
-    # --------------------------------------------------
-    sigma = diffusion.sqrt_one_minus_alphas_cumprod[T]
-
-    # T has shape [batch], so sigma has shape [batch].
     # We need a scalar if R, L, B_sq are global norms.
     sigma = sigma.mean().to(
         device=x_T.device,
