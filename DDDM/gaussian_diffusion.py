@@ -197,7 +197,7 @@ class VP_Diffusion:
         x_bar = th.randn(*shape, device=device)
         T = th.tensor([self.num_timesteps] * shape[0], device=device)
         sigma = torch.tensor(
-            self.sqrt_one_minus_alphas_cumprod[t],
+            self.sqrt_one_minus_alphas_cumprod[T],
             device=x_T.device,
             dtype=x_T.dtype,
         )
