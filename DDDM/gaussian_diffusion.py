@@ -199,7 +199,7 @@ class VP_Diffusion:
         sigma = torch.tensor(
             self.sqrt_one_minus_alphas_cumprod[T],
             device=x_T.device,
-            dtype=x_T.dtype,
+            dtype=x_T.dtype, 
         )
 
         result = analyze_reconstruction(
