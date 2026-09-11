@@ -158,67 +158,6 @@ def estimate_hessian_bound(
 
 def analyze_reconstruction(
     model,
-    x_T,
-    x_bar,
-    T,
-    sigma,
-    model_kwargs=None,
-):
-    """Compute R, L, B_sq and the Proposition 2 lower bound."""
-
-    if model_kwargs is None:
-        model_kwargs = {}
-
-    x_bar = x_bar.detach().requires_grad_(True)
-
-    # DDDM model output
-    F = model(
-        x_T,
-        T,
-        context=x_bar,
-        **model_kwargs,
-    )
-
-    # Actual DDDM reconstruction
-    x_hat = x_T - F
-
-    # r(z) = z - x_T + F(z)
-    r = x_bar - x_T + F
-
-    R = torch.linalg.vector_norm(r)
-
-    L = estimate_jacobian_spectral_norm(
-        model=model,
-        x_T=x_T,
-        x_bar=x_bar,
-        T=T,
-        model_kwargs=model_kwargs,
-    )
-
-    B_sq = estimate_hessian_bound(
-        model=model,
-        x_T=x_T,
-        x_bar=x_bar,
-        T=T,
-        model_kwargs=model_kwargs,
-    )
-
-    mu = (
-        (1.0 - L) ** 2
-        - R * B_sq
-    ) / sigma ** 2
-
-    return {
-        "x_hat": x_hat.detach(),
-        "R": R.detach(),
-        "L": L.detach(),
-        "B_sq": B_sq.detach(),
-        "mu_bound": mu.detach(),
-    }
-
-
-def analyze_reconstruction(
-    model,
     diffusion,
     x_T,
     x_bar,
