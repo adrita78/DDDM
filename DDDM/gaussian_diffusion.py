@@ -426,7 +426,7 @@ class VE_Diffusion:
                 )
                 x_bar = out
                
-        return x_bar
+        return x_bar, records
 
    
 
