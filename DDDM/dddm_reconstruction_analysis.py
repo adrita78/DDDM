@@ -164,16 +164,12 @@ def analyze_reconstruction(
     sigma,
     model_kwargs=None,
 ):
-    """Compute R, L, B_sq and the Proposition 2 lower bound."""
 
     if model_kwargs is None:
         model_kwargs = {}
 
     x_bar = x_bar.detach().requires_grad_(True)
 
-    # --------------------------------------------------
-    # DDDM model output
-    # --------------------------------------------------
     F = model(
         x_T,
         T,
@@ -189,9 +185,6 @@ def analyze_reconstruction(
 
     R = torch.linalg.vector_norm(r)
 
-    # --------------------------------------------------
-    # Jacobian spectral norm
-    # --------------------------------------------------
     L = estimate_jacobian_spectral_norm(
         model=model,
         x_T=x_T,
@@ -200,9 +193,7 @@ def analyze_reconstruction(
         model_kwargs=model_kwargs,
     )
 
-    # --------------------------------------------------
-    # Hessian bound
-    # --------------------------------------------------
+
     B_sq = estimate_hessian_bound(
         model=model,
         x_T=x_T,
@@ -211,15 +202,11 @@ def analyze_reconstruction(
         model_kwargs=model_kwargs,
     )
 
-    # We need a scalar if R, L, B_sq are global norms.
     sigma = sigma.mean().to(
         device=x_T.device,
         dtype=x_T.dtype,
     )
 
-    # --------------------------------------------------
-    # Proposition 2 lower bound
-    # --------------------------------------------------
     mu = (
         (1.0 - L) ** 2
         - R * B_sq
