@@ -161,6 +161,7 @@ def analyze_reconstruction(
     x_T,
     x_bar,
     T,
+    sigma,
     model_kwargs=None,
 ):
     """Compute R, L, B_sq and the Proposition 2 lower bound."""
