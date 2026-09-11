@@ -12,7 +12,7 @@ import torch as th
 
 from .nn import mean_flat
 from .losses import ph_loss,pl_loss
-from dddm_analysis_reconstruction import analyze_reconstruction
+from dddm_reconstruction_analysis import analyze_reconstruction
 
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps,beta_start,beta_end):
