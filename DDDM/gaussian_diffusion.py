@@ -9,10 +9,11 @@ import math
 
 import numpy as np
 import torch as th
+import torch
 
 from .nn import mean_flat
 from .losses import ph_loss,pl_loss
-from dddm_reconstruction_analysis import analyze_reconstruction
+from .dddm_reconstruction_analysis import analyze_reconstruction
 
 
 def get_named_beta_schedule(schedule_name, num_diffusion_timesteps,beta_start,beta_end):
@@ -186,7 +187,7 @@ class VP_Diffusion:
         """
 
         if model_kwargs is None:
-        model_kwargs = {}
+          model_kwargs = {}
         
         if device is None:
             device = next(model.parameters()).device
@@ -196,12 +197,8 @@ class VP_Diffusion:
        
         x_T = th.randn(*shape, device=device)
         x_bar = th.randn(*shape, device=device)
-        T = th.tensor([self.num_timesteps] * shape[0], device=device)
-        sigma = torch.tensor(
-            self.sqrt_one_minus_alphas_cumprod[T],
-            device=x_T.device,
-            dtype=x_T.dtype, 
-        )
+        T = th.tensor([self.num_timesteps-1] * shape[0], device=device)
+        sigma = torch.as_tensor(self.sqrt_one_minus_alphas_cumprod[T.cpu().numpy()],device=x_T.device,dtype=x_T.dtype,)
 
         result = analyze_reconstruction(
             model=model,
@@ -223,8 +220,7 @@ class VP_Diffusion:
                 )
                 x_bar = out
 
-         records.append({
-            "t": t,
+                records.append({
             "sigma": sigma.item(),
             "R": result["R"].item(),
             "L": result["L"].item(),
@@ -317,7 +313,7 @@ class VE_Diffusion:
         assert (sigmas > 0).all() and (sigmas <= 1).all()
 
         self.num_timesteps = int(sigmas.shape[0])
-        self.sigma_min = simgas[0]
+        self.sigma_min = sigmas[0]
         self.sigma_max = sigmas[-1]
 
       
@@ -396,7 +392,6 @@ class VE_Diffusion:
     
         sigma = sigma[0]
         records = []
-        if diagnostics:
 
         result = analyze_reconstruction(
             model=model,
