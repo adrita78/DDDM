@@ -1,6 +1,11 @@
 import torch
 from torch.func import jvp, vjp
 
+def disable_checkpointing(model):
+    for module in model.modules():
+        if hasattr(module, "checkpoint"):
+            module.checkpoint = False
+
 
 def estimate_jacobian_spectral_norm(
     model,
@@ -15,9 +20,12 @@ def estimate_jacobian_spectral_norm(
     if model_kwargs is None:
         model_kwargs = {}
 
+    disable_checkpointing(model)    
+
     x_bar = x_bar.detach().requires_grad_(True)
 
     def F_fn(z):
+        z = z.contiguous()
         return model(
             x_T,
             T,
@@ -61,10 +69,12 @@ def hessian_vector_product_of_projection(
     v,
 ):
     """Compute H_{u^T F}(x_bar) v."""
+    disable_checkpointing(model)
 
     x_bar = x_bar.detach().requires_grad_(True)
 
     def scalar_projection(z):
+        z = z.contiguous()
         F = model(
             x_T,
             T,
@@ -167,6 +177,8 @@ def analyze_reconstruction(
 
     if model_kwargs is None:
         model_kwargs = {}
+
+    disable_checkpointing(model)    
 
     x_bar = x_bar.detach().requires_grad_(True)
 
