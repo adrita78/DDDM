@@ -387,8 +387,8 @@ class VE_Diffusion:
        
         x_T = th.randn(*shape, device=device)
         x_bar = th.randn(*shape, device=device)
-        T = th.tensor([self.num_timesteps] * shape[0], device=device)
-        sigma = th.as_tensor(self.sigmas,device=device,dtype=x_T.dtype,)[T]
+        T = th.tensor([self.num_timesteps-1] * shape[0], device=device)
+        sigma = torch.as_tensor(self.sqrt_one_minus_alphas_cumprod[T.cpu().numpy()],device=x_T.device,dtype=x_T.dtype,)
     
         sigma = sigma[0]
         records = []
