@@ -15,7 +15,7 @@ def estimate_jacobian_spectral_norm(
     model_kwargs=None,
     num_power_iter=10,
 ):
-    """Estimate ||J_F(x_bar)||_op without constructing the Jacobian."""
+
 
     if model_kwargs is None:
         model_kwargs = {}
@@ -68,7 +68,7 @@ def hessian_vector_product_of_projection(
     u,
     v,
 ):
-    """Compute H_{u^T F}(x_bar) v."""
+    
     disable_checkpointing(model)
 
     x_bar = x_bar.detach().requires_grad_(True)
@@ -104,7 +104,7 @@ def estimate_hessian_bound(
     num_projections=4,
     num_power_iter=5,
 ):
-    """Estimate empirical B_sq surrogate."""
+
 
     if model_kwargs is None:
         model_kwargs = {}
