@@ -16,6 +16,7 @@ class SiLU(nn.Module):
 
 class GroupNorm32(nn.GroupNorm):
     def forward(self, x):
+        x = x.contiguous()
         return super().forward(x.float()).type(x.dtype)
 
 
